@@ -1,36 +1,89 @@
-# Q2Ray Root v0.0.2
+# Q2Ray Root
 
-**Q2Ray Root** là module proxy dành cho Android đã root, do tài khoản **lemanhquyen20004** phát triển riêng với sự hỗ trợ của AI.
+**Q2Ray Root** là module proxy dành cho **Android đã root**, do **lemanhquyen20004** phát triển và quản lý. Dự án tích hợp Xray-core, giao diện WebUI và khả năng chia sẻ proxy qua điểm phát Wi-Fi (Hotspot).
 
-**Chức năng phiên bản đầu:**
-- Xray-core TPROXY cho TCP/UDP.
-- Bật/tắt bằng Magisk Action hoặc WebUI; sau khi cài không tự bật proxy.
-- WebUI chọn **Tiếng Việt / English**, nhập VLESS TLS/REALITY hoặc JSON.
-- Tùy chọn phát Hotspot qua proxy (mặc định tắt, chỉ nhận diện giao diện AP).
-- Nếu Xray không chạy, khởi động lỗi, hoặc không cài được rule, module cố gắng gỡ rule riêng và trả mạng về Direct.
-- Không tự động tắt IPv6, không flush toàn bộ iptables hoặc đổi DNS của Android.
+[English](README.md) · [Tải phiên bản](https://github.com/lemanhquyen20004/Q2RayRoot/releases) · [Mã nguồn](https://github.com/lemanhquyen20004/Q2RayRoot)
 
-## Cài đặt
+> **Phiên bản v0.0.2 — bản thử nghiệm kỹ thuật.** Bản này đã vượt qua kiểm tra tự động trên GitHub Actions nhưng **chưa được xác nhận chạy ổn định trên Redmi Note 8T / MIUI 12.5.5 / Android 11**.
 
-Dùng tệp **Q2RayRoot-v0.0.2-arm64.zip** do GitHub Actions build hoặc tệp trong GitHub Releases (nếu đã phát hành). Không dùng **Source code ZIP** của GitHub để cài bởi source ZIP **không có Xray-core**.
+## Chức năng chính
 
-Cài qua Magisk / KernelSU / APatch, khởi động lại, mở WebUI trong trình quản lý hỗ trợ hoặc KsuWebUIStandalone. Nhập node và lưu trước khi bật proxy.
+- **Xray-core:** chuyển tiếp lưu lượng TCP/UDP bằng cơ chế TPROXY.
+- **Giao diện hai ngôn ngữ:** **Tiếng Việt** và **English**, có thể chuyển đổi ngay trong WebUI.
+- **Quản lý cấu hình:** nhập liên kết VLESS hỗ trợ TLS/REALITY, chỉnh sửa JSON Xray và kiểm tra cấu hình.
+- **Chia sẻ proxy qua Hotspot:** tùy chọn định tuyến lưu lượng thiết bị kết nối vào điểm phát Wi-Fi.
+- **Bảo vệ kết nối:** cố gắng khôi phục mạng Direct và dọn những quy tắc do module tạo khi khởi động thất bại hoặc Xray dừng bất thường.
+- **Cập nhật qua GitHub:** kiểm tra phiên bản mới, xác minh file ZIP bằng SHA-256 và hỗ trợ cài từ WebUI trên Magisk.
 
-## Cập nhật qua GitHub (từ v0.0.2)
+**Mặc định an toàn:** Module không tự bật proxy sau khi cài hoặc sau khi khởi động lại điện thoại. Chức năng chia sẻ proxy qua Hotspot cũng mặc định tắt.
 
-- Trong **Magisk**: mở danh sách module, bấm **Update / Cập nhật** ở **Q2Ray Root** khi Magisk phát hiện versionCode cao hơn. Không cần tự tải ZIP lên GitHub.
-- Trong **WebUI**: mục **Cập nhật**, bấm **Kiểm tra cập nhật**. Nếu có bản mới, bấm **Tải & cài đặt** và xác nhận. WebUI tải bản ZIP chỉ từ GitHub của dự án, kiểm tra SHA-256 rồi yêu cầu **Magisk CLI** cài đặt. Sau khi hiện **Đã cài**, khởi động lại máy. Nếu dùng KernelSU/APatch, hãy dùng nút Update trong trình quản lý root.
-- Không tự tải hay cài cập nhật khi bạn chưa bấm xác nhận. File ZIP tạm được xóa sau khi cập nhật xong.
-- Khi mã nguồn thay đổi, người quản lý tăng cả `version` và `versionCode` trong `module.prop` và `update.json`; GitHub Actions sẽ tạo bản phát hành mới sau khi kiểm tra mã và build ZIP thành công.
+## Yêu cầu
 
-**Lưu ý:** Bản này là technical preview, **chưa thử thực tế trên Redmi Note 8T MIUI Android 11**. Tuyệt đối không bật đồng thời Q2Ray Root với Box for Root / Magic V2Ray. Nếu không vào mạng, nhấn **Tắt / Direct**, hoặc tắt module trong Magisk và khởi động lại.
+- Điện thoại Android đã root bằng **Magisk, KernelSU hoặc APatch**.
+- Vi xử lý **ARM64**.
+- Trình quản lý hỗ trợ WebUI (một số phiên bản Magisk cần KsuWebUIStandalone).
+- Có node proxy đang hoạt động để sử dụng Internet qua Xray.
 
-**Dữ liệu riêng:** File node nằm ở `/data/adb/q2rayroot/config.json`; đừng đẩy UUID hoặc subscription lên GitHub.
+## Cách cài đặt
 
-## Kế hoạch
+1. Tải **[Q2RayRoot-v0.0.2-arm64.zip](https://github.com/lemanhquyen20004/Q2RayRoot/releases/download/v0.0.2/Q2RayRoot-v0.0.2-arm64.zip)** từ trang Release chính thức.
+2. Mở **Magisk → Modules → Install from storage** (hoặc chức năng cài module tương ứng trên KernelSU/APatch).
+3. Chọn file ZIP và khởi động lại điện thoại sau khi cài.
+4. Mở **Q2Ray Root WebUI** và chọn **Tiếng Việt** hoặc **English**.
+5. Nhập link VLESS hoặc cấu hình Xray JSON, sau đó lưu và kiểm tra.
+6. Nhấn **Bật Xray**, thử truy cập Internet trên điện thoại trước.
+7. Nếu muốn chia sẻ proxy, bật **Chia sẻ Proxy qua Hotspot** rồi kiểm tra Internet trên thiết bị nhận Wi-Fi.
 
-Mihomo, sing-box, subscription nâng cao, giới hạn thiết bị Hotspot và game profile **chưa có trong v0.0.2**. Chỉ triển khai sau kiểm thử.
+**Lưu ý:** Không dùng file **Source code ZIP** được GitHub tạo tự động để cài Magisk, vì file đó không chứa Xray-core ARM64.
+
+## Cập nhật tự động qua GitHub
+
+### Cách 1: Trong Magisk
+
+Khi có bản mới với `versionCode` cao hơn, mở **Magisk → Modules → Q2Ray Root → Update**. Magisk sẽ tải và cài file module từ GitHub Releases. Khởi động lại khi cài xong.
+
+### Cách 2: Trong WebUI
+
+Mở **Cập nhật → Kiểm tra cập nhật**. Nếu có phiên bản mới, nhấn **Tải & cài đặt** và xác nhận. Chức năng sẽ tải ZIP từ GitHub của dự án, kiểm tra SHA-256 và cài bằng lệnh Magisk. Sau khi thông báo cài đặt thành công, **khởi động lại** để áp dụng.
+
+Với **KernelSU/APatch**, dùng nút cập nhật trong trình quản lý module. Module **không tự cài đặt khi bạn chưa xác nhận** và sẽ xóa file ZIP tạm sau khi cập nhật hoàn tất.
+
+Khi phát triển bản mới, cần tăng `version` và `versionCode` trong `module.prop` và `update.json`. GitHub Actions sẽ kiểm tra mã nguồn, build ZIP ARM64 và xuất bản bản prerelease cùng checksum.
+
+## Khắc phục lỗi mạng
+
+Không nên chạy đồng thời nhiều module proxy trong suốt trên máy root vì các quy tắc tường lửa và định tuyến có thể xung đột.
+
+Nếu không vào được 4G hoặc Wi-Fi sau khi bật Xray, hãy nhấn **Tắt / Direct**. Nếu mạng vẫn chưa khôi phục, tắt module trong Magisk và khởi động lại.
+
+| Đường dẫn | Nội dung |
+| --- | --- |
+| `/data/adb/q2rayroot/config.json` | Cấu hình Xray đã lưu |
+| `/data/adb/q2rayroot/run.log` | Nhật ký hoạt động và định tuyến |
+| `/data/adb/q2rayroot/update.status` | Trạng thái cập nhật |
+| `/data/adb/q2rayroot/update.log` | Nhật ký cập nhật |
+
+**Bảo mật:** Không đăng UUID của node VLESS, link subscription có token hoặc thông tin máy chủ riêng tư lên GitHub công khai.
+
+## Cấu trúc dự án
+
+| Thành phần | Chức năng |
+| --- | --- |
+| `scripts/q2r.sh` | Điều khiển Xray, TPROXY, Hotspot, khôi phục mạng |
+| `scripts/update.sh` | Kiểm tra và cài bản cập nhật đã xác minh |
+| `webroot/index.html` | Giao diện tiếng Việt và tiếng Anh |
+| `config/default.json` | Cấu hình Xray ban đầu ở chế độ Direct |
+| `build.sh` | Đóng gói module ARM64 |
+| `.github/workflows/build.yml` | Kiểm tra, build và tạo bản phát hành |
+
+## Định hướng phát triển
+
+Các tính năng dự kiến cho phiên bản sau gồm: **Mihomo, sing-box, quản lý subscription nâng cao, giới hạn dữ liệu theo thiết bị Hotspot và chế độ chơi game**. Những chức năng này **chưa có trong v0.0.2**.
 
 ## Bản quyền
 
-© 2026 **lemanhquyen20004** đối với mã nguồn gốc được tạo cho Q2Ray Root. Giấy phép dự án GPL-3.0-or-later. Xray-core và các thư viện bên thứ ba vẫn thuộc tác giả tương ứng. Xem [NOTICE.md](NOTICE.md).
+**Copyright © 2026 lemanhquyen20004** — đối với mã nguồn và giao diện gốc của dự án Q2Ray Root.
+
+Dự án sử dụng giấy phép **GPL-3.0-or-later**. Những thành phần bên thứ ba, bao gồm **Xray-core (MPL-2.0)**, giữ nguyên giấy phép và quyền tác giả tương ứng. Xem [LICENSE](LICENSE) và [NOTICE.md](NOTICE.md).
+
+*Q2Ray Root là dự án được phát triển và quản lý riêng. Tính tương thích và độ ổn định phụ thuộc từng thiết bị, bản Android và kernel.*
