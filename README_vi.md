@@ -1,16 +1,19 @@
 # Q2Ray Root
 
-**Q2Ray Root** là module proxy dành cho **Android đã root**, do **lemanhquyen20004** phát triển và quản lý. Dự án tích hợp Xray-core, giao diện WebUI và khả năng chia sẻ proxy qua điểm phát Wi-Fi (Hotspot).
+**Q2Ray Root** là module proxy dành cho **Android đã root**, do **lemanhquyen20004** phát triển và quản lý. Dự án tích hợp Xray-core, sing-box, giao diện WebUI và khả năng chia sẻ proxy qua điểm phát Wi-Fi (Hotspot).
 
 [English](README.md) · [Tải phiên bản](https://github.com/lemanhquyen20004/Q2RayRoot/releases) · [Mã nguồn](https://github.com/lemanhquyen20004/Q2RayRoot)
 
-> **Phiên bản v0.0.2 — bản thử nghiệm kỹ thuật.** Bản này đã vượt qua kiểm tra tự động trên GitHub Actions nhưng **chưa được xác nhận chạy ổn định trên Redmi Note 8T / MIUI 12.5.5 / Android 11**.
+> **Phiên bản v0.0.3 — bản thử nghiệm kỹ thuật.** Bản này đã vượt qua kiểm tra tự động trên GitHub Actions nhưng **chưa được xác nhận chạy ổn định trên Redmi Note 8T / MIUI 12.5.5 / Android 11**.
 
 ## Chức năng chính
 
-- **Xray-core:** chuyển tiếp lưu lượng TCP/UDP bằng cơ chế TPROXY.
+- **Xray-core và sing-box:** xử lý lưu lượng TCP/UDP bằng TPROXY, chọn core theo cấu hình.
 - **Giao diện hai ngôn ngữ:** **Tiếng Việt** và **English**, có thể chuyển đổi ngay trong WebUI.
-- **Quản lý cấu hình:** nhập liên kết VLESS hỗ trợ TLS/REALITY, chỉnh sửa JSON Xray và kiểm tra cấu hình.
+- **Nhập nhiều giao thức:** VLESS, Trojan, VMess, Shadowsocks, Hysteria/Hysteria2, TUIC.
+- **Link subscription:** nhập sub HTTPS, danh sách URI thường, Base64, Clash YAML hoặc sing-box JSON.
+- **Quản lý node:** lưu danh sách node riêng trên máy, chọn node đang dùng và làm mới subscription thủ công.
+- **Cấu hình nâng cao:** chỉnh sửa JSON Xray hoặc sing-box và kiểm tra bằng core tương ứng.
 - **Chia sẻ proxy qua Hotspot:** tùy chọn định tuyến lưu lượng thiết bị kết nối vào điểm phát Wi-Fi.
 - **Bảo vệ kết nối:** cố gắng khôi phục mạng Direct và dọn những quy tắc do module tạo khi khởi động thất bại hoặc Xray dừng bất thường.
 - **Cập nhật qua GitHub:** kiểm tra phiên bản mới, xác minh file ZIP bằng SHA-256 và hỗ trợ cài từ WebUI trên Magisk.
@@ -26,15 +29,23 @@
 
 ## Cách cài đặt
 
-1. Tải **[Q2RayRoot-v0.0.2-arm64.zip](https://github.com/lemanhquyen20004/Q2RayRoot/releases/download/v0.0.2/Q2RayRoot-v0.0.2-arm64.zip)** từ trang Release chính thức.
+1. Tải **[Q2RayRoot-v0.0.3-arm64.zip](https://github.com/lemanhquyen20004/Q2RayRoot/releases/download/v0.0.3/Q2RayRoot-v0.0.3-arm64.zip)** từ trang Release chính thức.
 2. Mở **Magisk → Modules → Install from storage** (hoặc chức năng cài module tương ứng trên KernelSU/APatch).
 3. Chọn file ZIP và khởi động lại điện thoại sau khi cài.
 4. Mở **Q2Ray Root WebUI** và chọn **Tiếng Việt** hoặc **English**.
-5. Nhập link VLESS hoặc cấu hình Xray JSON, sau đó lưu và kiểm tra.
-6. Nhấn **Bật Xray**, thử truy cập Internet trên điện thoại trước.
-7. Nếu muốn chia sẻ proxy, bật **Chia sẻ Proxy qua Hotspot** rồi kiểm tra Internet trên thiết bị nhận Wi-Fi.
+5. Mở **Nhập Node / Subscription**: dán một hoặc nhiều link VLESS/Trojan/VMess/SS/Hysteria2/TUIC rồi nhấn **Thêm node**. Với link sub HTTPS, dán vào **Đường dẫn subscription** và chọn **Tải / Cập nhật subscription**.
+6. Chọn node trong danh sách và bấm **Chọn & lưu node** để tự tạo cấu hình sing-box. Nếu sử dụng Xray JSON thủ công, chọn core Xray trong phần **Cấu hình nâng cao**.
+7. Nhấn **Bật Xray** (hoặc core đang chọn) và kiểm tra Internet trên điện thoại. Nếu muốn chia sẻ proxy, bật **Chia sẻ Proxy qua Hotspot** rồi thử trên thiết bị nhận Wi-Fi.
 
 **Lưu ý:** Không dùng file **Source code ZIP** được GitHub tạo tự động để cài Magisk, vì file đó không chứa Xray-core ARM64.
+
+## Định dạng node và subscription hỗ trợ
+
+- **Link node:** `vless://`, `trojan://`, `vmess://`, `ss://`, `hysteria://`, `hy2://`, `hysteria2://`, `tuic://` (các tham số phổ biến).
+- **Link sub:** URL HTTPS trả về danh sách link thường, danh sách mã hóa Base64, Clash YAML có mục `proxies:`, hoặc sing-box JSON có mục `outbounds`. Có thể dán trực tiếp nội dung sub.
+- **Nhiều node:** danh sách node được lưu ở `/data/adb/q2rayroot/nodes.json`; URL sub tại `/data/adb/q2rayroot/subscription.url`.
+- **Giới hạn:** tối đa 1 MiB nội dung subscription mỗi lần tải. Một số transport hoặc plugin đặc biệt chưa hỗ trợ và được báo bỏ qua. Cần tắt proxy trước khi đổi node hoặc core.
+- **Core:** sing-box dùng cho node/subscription, Xray vẫn dùng được với JSON thủ công. Kiểm tra JSON thành công chưa chắc server đã kết nối được.
 
 ## Cập nhật tự động qua GitHub
 
@@ -78,12 +89,12 @@ Nếu không vào được 4G hoặc Wi-Fi sau khi bật Xray, hãy nhấn **T�
 
 ## Định hướng phát triển
 
-Các tính năng dự kiến cho phiên bản sau gồm: **Mihomo, sing-box, quản lý subscription nâng cao, giới hạn dữ liệu theo thiết bị Hotspot và chế độ chơi game**. Những chức năng này **chưa có trong v0.0.2**.
+Các tính năng dự kiến cho phiên bản sau gồm: **Mihomo, tự cập nhật sub theo lịch, quản lý subscription nâng cao, giới hạn dữ liệu theo thiết bị Hotspot và chế độ chơi game**. Những chức năng này **chưa có trong v0.0.3**.
 
 ## Bản quyền
 
 **Copyright © 2026 lemanhquyen20004** — đối với mã nguồn và giao diện gốc của dự án Q2Ray Root.
 
-Dự án sử dụng giấy phép **GPL-3.0-or-later**. Những thành phần bên thứ ba, bao gồm **Xray-core (MPL-2.0)**, giữ nguyên giấy phép và quyền tác giả tương ứng. Xem [LICENSE](LICENSE) và [NOTICE.md](NOTICE.md).
+Dự án sử dụng giấy phép **GPL-3.0-or-later**. Những thành phần bên thứ ba, bao gồm **Xray-core (MPL-2.0), sing-box (GPL-3.0-or-later) và js-yaml (MIT)**, giữ nguyên giấy phép và quyền tác giả tương ứng. Xem [LICENSE](LICENSE) và [NOTICE.md](NOTICE.md).
 
 *Q2Ray Root là dự án được phát triển và quản lý riêng. Tính tương thích và độ ổn định phụ thuộc từng thiết bị, bản Android và kernel.*

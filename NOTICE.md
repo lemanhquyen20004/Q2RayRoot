@@ -1,11 +1,14 @@
 # Q2Ray Root — Copyright and third-party notices
 
-Copyright © 2026 **lemanhquyen20004**. Original source files and bilingual WebUI developed for the Q2Ray Root repository are released under **GPL-3.0-or-later** (see LICENSE).
+Copyright © 2026 **lemanhquyen20004**. Original Q2Ray Root project code and bilingual WebUI are distributed under **GPL-3.0-or-later**. See [LICENSE](LICENSE).
 
-**Third-party intellectual property is not transferred to the repository owner.**
+Q2Ray Root is independently maintained. **Third-party copyrights are not transferred to the repository owner.**
 
-- [Xray-core](https://github.com/XTLS/Xray-core), copyright its respective contributors, Mozilla Public License 2.0. The ARM64 module artifact includes the unmodified upstream executable. Its license and source remain available upstream.
-- [Box for Root](https://github.com/taamarin/box_for_magisk), GPL-3.0, and [Magic V2Ray](https://github.com/vincentng295/Magic_V2Ray), GPL-3.0, were studied for design ideas. Q2Ray Root v0.0.1 does not copy their routing or WebUI scripts verbatim. Their names, marks and fixes are not warranties of compatibility.
-- Android, Magisk, KernelSU and APatch names belong to their respective trademark holders.
+- **Xray-core:** [XTLS/Xray-core](https://github.com/XTLS/Xray-core), Mozilla Public License 2.0, respective upstream contributors. Its official Android ARM64 executable is bundled unmodified. The distribution contains `third_party/Xray-LICENSE`.
+- **sing-box:** [SagerNet/sing-box](https://github.com/SagerNet/sing-box), GPL-3.0-or-later, respective contributors. The official Android ARM64 executable is bundled unmodified. The distribution contains `third_party/sing-box-LICENSE`.
+- **js-yaml 4.1.0:** [nodeca/js-yaml](https://github.com/nodeca/js-yaml), MIT License, Vitaly Puzrin and contributors. The distribution contains the minified browser parser and `third_party/js-yaml-LICENSE`.
+- Android, Magisk, KernelSU and APatch names belong to their respective owners.
 
-This project does not offer any entitlement to mobile-carrier data, and a proxy cannot create unlimited bandwidth or eliminate a data allowance.
+Subscriptions may contain private authentication credentials. Never publish real subscription URLs or node credentials in a public repository, issue or log.
+
+A proxy does not provide free data allowance or circumvent any legal data limits.

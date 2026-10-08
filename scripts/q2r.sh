@@ -6,8 +6,29 @@
 # netd NAT, rp_filter or forwarding sysctls.
 MODDIR=${0%/scripts/*}
 DATA=/data/adb/q2rayroot
-BIN="$MODDIR/bin/xray"
+XRAY_BIN="$MODDIR/bin/xray"
+SINGBOX_BIN="$MODDIR/bin/sing-box"
+ENGINE_FILE="$DATA/engine.txt"
+BIN="$XRAY_BIN"
 CONF="$DATA/config.json"
+ENGINE=xray
+load_engine() {
+  ENGINE=$(cat "$ENGINE_FILE" 2>/dev/null)
+  case "$ENGINE" in
+    sing-box) BIN="$SINGBOX_BIN"; CONF="$DATA/singbox.json" ;;
+    *) ENGINE=xray; BIN="$XRAY_BIN"; CONF="$DATA/config.json" ;;
+  esac
+}
+is_our_pid() {
+  pp=$1
+  case "$pp" in ''|*[!0-9]*) return 1 ;; esac
+  [ -r "/proc/$pp/cmdline" ] || return 1
+  cmdline=$(tr '\000' ' ' < "/proc/$pp/cmdline")
+  case "$cmdline" in
+    *"$XRAY_BIN"*|*"$SINGBOX_BIN"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 LOG="$DATA/run.log"
 PIDFILE="$DATA/xray.pid"
 ACTIVE="$DATA/active"
@@ -34,7 +55,7 @@ alive() {
   kill -0 "$p" 2>/dev/null || return 1
   # Avoid treating a recycled PID as our own daemon.
   [ -r "/proc/$p/cmdline" ] || return 1
-  tr '\000' ' ' < "/proc/$p/cmdline" | grep -Fq "$BIN" || return 1
+  is_our_pid "$p" || return 1
 }
 lock_enter() {
   count=0
@@ -78,7 +99,7 @@ stop_impl() {
   if [ -s "$PIDFILE" ]; then
     p=$(cat "$PIDFILE" 2>/dev/null)
     case "$p" in ''|*[!0-9]*) : ;; *)
-      if [ -r "/proc/$p/cmdline" ] && tr '\000' ' ' < "/proc/$p/cmdline" | grep -Fq "$BIN"; then
+      if is_our_pid "$p"; then
         kill "$p" 2>/dev/null || :
       fi ;;
     esac
@@ -160,16 +181,32 @@ apply_rules() {
   ipt -t mangle -I OUTPUT 1 -j "$OUT" || return 1
 }
 valid_config() {
-  [ -x "$BIN" ] || { echo "NO_CORE: ARM64 Xray binary missing"; return 1; }
-  [ -s "$1" ] || { echo "NO_CONFIG: Save Xray JSON first"; return 1; }
-  "$BIN" run -test -c "$1" >> "$LOG" 2>&1 || { echo "INVALID_CONFIG"; return 1; }
+  path=$1
+  check_engine=$2
+  case "$check_engine" in
+    sing-box) check_bin="$SINGBOX_BIN" ;;
+    xray) check_bin="$XRAY_BIN" ;;
+    *) echo "BAD_ENGINE"; return 1 ;;
+  esac
+  [ -x "$check_bin" ] || { echo "NO_CORE: $check_engine ARM64 binary missing"; return 1; }
+  [ -s "$path" ] || { echo "NO_CONFIG: Save $check_engine JSON first"; return 1; }
+  if [ "$check_engine" = sing-box ]; then
+    "$check_bin" check -c "$path" >> "$LOG" 2>&1 || {
+      echo "INVALID_CONFIG: sing-box validation failed (see run.log)"; return 1;
+    }
+  else
+    "$check_bin" run -test -c "$path" >> "$LOG" 2>&1 || {
+      echo "INVALID_CONFIG: Xray validation failed (see run.log)"; return 1;
+    }
+  fi
 }
 start_impl() {
   if alive && [ -f "$ACTIVE" ]; then echo "ALREADY_RUNNING"; return 0; fi
   stop_impl
+  load_engine
   conflict_check || return 1
-  valid_config "$CONF" || return 1
-  log "launching Xray..."
+  valid_config "$CONF" "$ENGINE" || return 1
+  log "launching $ENGINE..."
   "$BIN" run -c "$CONF" >> "$LOG" 2>&1 </dev/null &
   p=$!
   printf '%s\n' "$p" > "$PIDFILE"
@@ -187,18 +224,25 @@ start_impl() {
     return 1
   fi
   touch "$ACTIVE"
-  log "Xray TPROXY enabled"
+  log "$ENGINE TPROXY enabled"
   echo "RUNNING"
 }
 case "${1:-}" in
   status)
+    load_engine
     if alive && [ -f "$ACTIVE" ]; then echo running
     elif [ ! -x "$BIN" ]; then echo missing-core
     else echo stopped; fi
     ;;
+  engine)
+    load_engine
+    echo "$ENGINE"
+    ;;
   validate)
-    # The WebUI only uses this pre-defined candidate, never arbitrary paths.
-    valid_config "$DATA/config.candidate"
+    # A fixed candidate file and allowlisted core only. No arbitrary paths.
+    case "$2" in xray|sing-box) valid_config "$DATA/config.candidate.json" "$2" ;;
+      *) echo "BAD_ENGINE"; exit 2 ;;
+    esac
     ;;
   start)
     lock_enter || exit 1
@@ -256,7 +300,7 @@ case "${1:-}" in
     done
     ;;
   *)
-    echo "usage: q2r.sh {status|validate|start|stop|restart|hotspot on|off|status|monitor}" >&2
+    echo "usage: q2r.sh {status|engine|validate xray|sing-box|start|stop|restart|hotspot on|off|status|monitor}" >&2
     exit 2
     ;;
 esac

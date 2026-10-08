@@ -2,7 +2,7 @@ name: Q2Ray Root • checks, package and release
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/multi-protocol-subscriptions]
   pull_request:
   workflow_dispatch:
 
@@ -17,7 +17,7 @@ jobs:
       - name: Shell syntax
         run: |
           set -e
-          for f in customize.sh service.sh action.sh uninstall.sh scripts/q2r.sh scripts/update.sh; do
+          for f in customize.sh service.sh action.sh uninstall.sh scripts/q2r.sh scripts/update.sh scripts/subscription.sh; do
             sh -n "$f"
           done
           bash -n build.sh
@@ -28,8 +28,9 @@ jobs:
           import json,re
           html=Path('webroot/index.html').read_text()
           scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S|re.I)
-          assert len(scripts)==1, 'Expected one WebUI script'
-          Path('/tmp/q2ray-webui.js').write_text(scripts[0])
+          inline=[x for x in scripts if x.strip()]
+          assert len(inline)==1, 'Expected one inline WebUI script'
+          Path('/tmp/q2ray-webui.js').write_text(inline[0])
           props=dict(line.split('=',1) for line in Path('module.prop').read_text().splitlines() if '=' in line)
           version=props['version']
           assert re.fullmatch(r'v\d+\.\d+\.\d+', version),version
@@ -41,7 +42,8 @@ jobs:
           cfg=json.loads(Path('config/default.json').read_text())
           assert any(i.get('protocol')=='dokodemo-door' and i.get('port')==9898 for i in cfg['inbounds'])
           assert 'Tiếng Việt' in html and 'English' in html
-          for marker in ('checkUpdate','installUpdate','updateMsg',"scripts/update.sh"):
+          for marker in ('checkUpdate','installUpdate','updateMsg',"scripts/update.sh",
+                         'importNodes','refreshSub','nodePicker','useNode','sing-box','config.candidate.json'):
               assert marker in html,marker
           script=Path('scripts/update.sh').read_text()
           assert 'SHA256_MISMATCH' in script
@@ -52,12 +54,30 @@ jobs:
           print('WebUI, update.json, module metadata, updater checks passed')
           PY
           node --check /tmp/q2ray-webui.js
+          node --check webroot/nodes.js
+          node --check webroot/vendor/js-yaml.min.js
+          node tests/nodes.test.js
       - name: Check boot networking safety
         run: |
           set -e
           ! grep -En 'iptables.* -F (INPUT|OUTPUT|FORWARD)|ip route (flush|replace) default|disable_ipv6=1' scripts/q2r.sh
           ! grep -Eq 'scripts/update.sh.*begin' service.sh customize.sh
           ! grep -Eq 'scripts/q2r.sh.*start' service.sh customize.sh
+
+      - name: Check imported node configurations with official sing-box 1.14.2 (Linux AMD64)
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 2             "https://github.com/SagerNet/sing-box/releases/download/v1.14.2/sing-box-1.14.2-linux-amd64.tar.gz"             -o /tmp/sb.tar.gz
+          mkdir -p /tmp/sb-cli
+          tar -xzf /tmp/sb.tar.gz -C /tmp/sb-cli
+          sb=$(find /tmp/sb-cli -type f -name sing-box | head -n 1)
+          test -n "$sb"
+          chmod +x "$sb"
+          "$sb" version
+          for file in /tmp/q2r-test-configs/*.json; do
+            echo "Checking $file"
+            "$sb" check -c "$file"
+          done
 
   package:
     needs: checks
@@ -73,6 +93,10 @@ jobs:
           sha256sum -c Q2RayRoot-*.zip.sha256
           unzip -tqq Q2RayRoot-*.zip
           unzip -Z -1 Q2RayRoot-*.zip | grep -qx scripts/update.sh
+          unzip -Z -1 Q2RayRoot-*.zip | grep -qx scripts/subscription.sh
+          unzip -Z -1 Q2RayRoot-*.zip | grep -qx bin/sing-box
+          unzip -Z -1 Q2RayRoot-*.zip | grep -qx webroot/nodes.js
+          unzip -Z -1 Q2RayRoot-*.zip | grep -qx webroot/vendor/js-yaml.min.js
       - name: Upload installable module
         uses: actions/upload-artifact@v4
         with:

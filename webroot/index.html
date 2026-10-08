@@ -29,7 +29,7 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 </style></head>
 <body><div class="shell">
 <header class="header">
-<div class="brand"><div class="logo">Q<span style="font-size:16px">2</span></div><div><h1>Q2Ray Root</h1><div class="sub">v0.0.2 · ROOT PROXY MANAGER</div></div></div>
+<div class="brand"><div class="logo">Q<span style="font-size:16px">2</span></div><div><h1>Q2Ray Root</h1><div class="sub">v0.0.3 · ROOT PROXY MANAGER</div></div></div>
 <select id="lang" aria-label="Language"><option value="vi">Tiếng Việt</option><option value="en">English</option></select>
 </header>
 <section class="card hero">
@@ -52,14 +52,41 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 </section>
 </div>
 <section class="card">
-<h3 class="title" data-t="importTitle">Nhập VLESS / Cấu hình Xray</h3>
-<p class="muted" data-t="importInfo">Dán một link VLESS sử dụng TLS hoặc REALITY để tạo cấu hình; hoặc sửa trực tiếp JSON bên dưới. Dừng Xray trước khi lưu.</p>
-<input type="text" id="vless" autocomplete="off" spellcheck="false" placeholder="vless://uuid@server:443?...">
-<div class="actions"><button id="convert" data-t="convert">Chuyển VLESS → Xray</button><button id="load" data-t="load">Tải cấu hình đang lưu</button></div>
+<div class="eyebrow" data-t="proxyGroupLabel">NODES & SUBSCRIPTIONS</div>
+<h3 class="title" data-t="importTitle">Nhập Node / Subscription</h3>
+<p class="muted" data-t="importInfo">Dán một hoặc nhiều link VLESS, Trojan, VMess, SS, Hysteria2, TUIC; hoặc danh sách Base64 / Clash YAML.</p>
+<label class="muted small" for="sourceText" data-t="nodeLinksLabel">Link node / nội dung subscription</label>
+<textarea id="sourceText" rows="3" style="min-height:92px" spellcheck="false" placeholder="vless://...
+trojan://...
+hysteria2://..."></textarea>
+<div class="actions"><button id="importNodes" class="primary" data-t="importNodes">Thêm node</button></div>
 <div class="spacer"></div>
-<textarea id="config" spellcheck="false" aria-label="Xray configuration JSON"></textarea>
-<div class="actions"><button id="save" class="primary" data-t="save">Lưu &amp; kiểm tra cấu hình</button></div>
-<p class="muted small" data-t="privacy">Mã node được lưu trên điện thoại. Không đưa link chứa UUID của bạn lên GitHub.</p>
+<label class="muted small" for="subUrl" data-t="subscriptionLabel">URL subscription HTTPS</label>
+<input type="text" id="subUrl" autocomplete="off" spellcheck="false" placeholder="https://example.com/sub/..." inputmode="url">
+<div class="actions"><button id="refreshSub" data-t="refreshSub">Tải / Cập nhật subscription</button></div>
+<div class="spacer"></div>
+<h3 class="title" data-t="nodeList">Danh sách node</h3>
+<select id="nodePicker" style="max-width:none;width:100%" aria-label="Proxy nodes"><option value="">—</option></select>
+<div class="actions">
+  <button id="useNode" class="primary" data-t="useNode">Chọn & lưu node</button>
+  <button id="removeNode" data-t="removeNode">Xóa node chọn</button>
+</div>
+<p id="nodeInfo" class="muted small" aria-live="polite"></p>
+</section>
+<section class="card">
+<h3 class="title" data-t="configTitle">Cấu hình core (nâng cao)</h3>
+<p class="muted" data-t="configHelp">Nếu nhập node từ danh sách, cấu hình sing-box được tạo tự động. Bạn cũng có thể sửa JSON Xray hoặc sing-box thủ công.</p>
+<label class="muted small" for="engine" data-t="coreLabel">Core xử lý</label>
+<select id="engine" style="max-width:none;width:100%;margin:8px 0 12px">
+  <option value="xray">Xray (JSON thủ công)</option>
+  <option value="sing-box">sing-box (node / subscription)</option>
+</select>
+<textarea id="config" spellcheck="false" aria-label="Core JSON configuration"></textarea>
+<div class="actions">
+  <button id="load" data-t="load">Tải cấu hình đã lưu</button>
+  <button id="save" class="primary" data-t="save">Lưu & kiểm tra cấu hình</button>
+</div>
+<p class="muted small" data-t="privacy">Thông tin node và subscription chỉ lưu trên điện thoại; không đưa UUID/token lên GitHub.</p>
 </section>
 <section class="card" id="update-card">
 <div class="eyebrow" data-t="updateTag">CẬP NHẬT</div>
@@ -80,6 +107,8 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 <div id="notice" role="status" aria-live="polite"></div>
 <footer>© 2026 lemanhquyen20004 · Q2Ray Root<br><span data-t="footer">Mã gốc thuộc chủ sở hữu tương ứng · Xray-core được cấp phép riêng.</span></footer>
 </div>
+<script src="vendor/js-yaml.min.js"></script>
+<script src="nodes.js"></script>
 <script>
 'use strict';
 const MOD='/data/adb/modules/q2rayroot';
@@ -108,8 +137,48 @@ updateConfirm:'Download and install an update with Magisk? Keep your internet co
 updateError:'Could not check for updates: ',updateReady:'Update installed. Reboot the phone to apply it.',
 updateFailed:'Update failed: ',updateChecking:'Checking for updates...',updateQueued:'Update queued...',updateDownloading:'Downloading update...',updateVerifying:'Verifying ZIP and SHA-256...',updateInstalling:'Installing module using Magisk...',updateNo:'No newer release found.',updateUnsupported:'Magisk CLI is unavailable. Please use the root manager Update button.',updateTime:'Lost update status connection.'
 });
+Object.assign(dict.vi,{
+ proxyGroupLabel:'NODE & SUBSCRIPTION',importTitle:'Nhập Node / Subscription',
+ importInfo:'Hỗ trợ VLESS, Trojan, VMess, Shadowsocks, Hysteria/Hysteria2, TUIC và danh sách Base64 / Clash YAML / sing-box JSON.',
+ nodeLinksLabel:'Link node hoặc nội dung subscription',importNodes:'Thêm node',
+ subscriptionLabel:'Đường dẫn subscription (HTTPS)',refreshSub:'Tải / Cập nhật subscription',
+ nodeList:'Danh sách node',useNode:'Chọn & lưu node',removeNode:'Xóa node chọn',
+ configTitle:'Cấu hình core (nâng cao)',configHelp:'Node trong danh sách sẽ tạo JSON sing-box tự động. Bạn vẫn có thể chỉnh JSON Xray hoặc sing-box thủ công.',
+ coreLabel:'Core xử lý',load:'Tải cấu hình đã lưu',save:'Lưu & kiểm tra cấu hình',
+ privacy:'Node và link subscription chỉ lưu trên điện thoại. Không đăng UUID, mật khẩu hoặc token lên GitHub.',
+ nodesCount:'Số node: ',nodesAdded:'Đã nhập node: ',nodesErrors:' node bỏ qua: ',nodesEmpty:'Chưa có node nào. Hãy nhập link hoặc sub.',
+ nodeChosen:'Đã chọn và lưu node: ',nodeRemoved:'Đã xóa node.',
+ subLoad:'Đang tải subscription...',subRead:'Đang đọc subscription...',subDone:'Đã đồng bộ subscription.',
+ configSaved:'Đã lưu và xác thực cấu hình ',coreFail:'Cấu hình không hợp lệ hoặc thiếu TPROXY port 9898.',
+ configMissing:'Chưa có cấu hình cho core này.',nodeSaved:'Đã lưu danh sách node.',
+ nodeSelectFirst:'Hãy chọn một node trong danh sách.',
+ stopBeforeChange:'Hãy tắt proxy trước khi đổi core hoặc node.',
+ noLink:'Hãy dán link node hoặc nhập đường dẫn subscription.',
+ unsupportedNodes:'Không thể tìm thấy node hỗ trợ trong nội dung này.',
+ errors:'Lỗi nhận dạng: ',subNoHttps:'Link subscription phải bắt đầu bằng https://'
+});
+Object.assign(dict.en,{
+ proxyGroupLabel:'NODES & SUBSCRIPTIONS',importTitle:'Nodes / Subscriptions',
+ importInfo:'Supports VLESS, Trojan, VMess, Shadowsocks, Hysteria/Hysteria2, TUIC, and Base64 / Clash YAML / sing-box JSON lists.',
+ nodeLinksLabel:'Node links or subscription content',importNodes:'Import nodes',
+ subscriptionLabel:'HTTPS subscription URL',refreshSub:'Fetch / Refresh subscription',
+ nodeList:'Saved nodes',useNode:'Select & save node',removeNode:'Delete selected node',
+ configTitle:'Core configuration (advanced)',configHelp:'A selected node generates sing-box JSON automatically. Xray or sing-box JSON can also be edited manually.',
+ coreLabel:'Proxy core',load:'Load saved configuration',save:'Save & validate configuration',
+ privacy:'Node credentials and subscription URLs are stored only on the phone. Never publish UUIDs, passwords or tokens.',
+ nodesCount:'Nodes: ',nodesAdded:'Imported nodes: ',nodesErrors:' skipped nodes: ',nodesEmpty:'No nodes saved. Import a link or subscription.',
+ nodeChosen:'Selected and saved node: ',nodeRemoved:'Node deleted.',
+ subLoad:'Downloading subscription...',subRead:'Reading subscription...',subDone:'Subscription refreshed.',
+ configSaved:'Configuration saved and validated for ',coreFail:'Invalid config or missing TPROXY on port 9898.',
+ configMissing:'No configuration saved for this core.',nodeSaved:'Node list saved.',
+ nodeSelectFirst:'Choose a node from the list.',stopBeforeChange:'Stop the proxy before changing nodes or core.',
+ noLink:'Paste a node link or enter a subscription URL.',
+ unsupportedNodes:'No supported nodes found in the input.',
+ errors:'Import errors: ',subNoHttps:'Subscription URLs must begin with https://'
+});
 let lang='vi',working=false,status='stopped',initialized=false;
 let updateAvailable=false, updatePoll=null;
+let nodes=[],selectedNodeId='',subscriptionRunning=false;
 try {lang=localStorage.getItem('q2r-lang')==='en'?'en':'vi';} catch(e){}
 const E=id=>document.getElementById(id);
 const tr=k=>(dict[lang]&&dict[lang][k])||k;
@@ -125,7 +194,19 @@ function exec(command){
  });
 }
 async function locked(task){if(working)return;working=true;disableButtons();say(tr('busy'));try{await task();}catch(e){say(tr('failed')+e.message,true);}finally{working=false;disableButtons();}}
-function disableButtons(){E('start').disabled=working||status==='running';E('stop').disabled=working||status!=='running';E('save').disabled=working||status==='running';E('hotspot').disabled=working;E('checkUpdate').disabled=working;E('installUpdate').disabled=working||!updateAvailable||Boolean(updatePoll);}
+function disableButtons(){
+ E('start').disabled=working||status==='running';
+ E('stop').disabled=working||status!=='running';
+ E('save').disabled=working||status==='running';
+ E('useNode').disabled=working||status==='running'||!nodes.length;
+ E('removeNode').disabled=working||status==='running'||!nodes.length;
+ E('engine').disabled=working||status==='running';
+ E('importNodes').disabled=working;
+ E('refreshSub').disabled=working||subscriptionRunning;
+ E('hotspot').disabled=working;
+ E('checkUpdate').disabled=working;
+ E('installUpdate').disabled=working||!updateAvailable||Boolean(updatePoll);
+}
 function renderStatus(){
  const el=E('state');el.className='status'+(status==='running'?' running':status==='missing-core'?' missing':'');
  E('stateText').textContent=status==='running'?tr('running'):status==='missing-core'?tr('missing'):tr('stopped');
@@ -162,9 +243,12 @@ function convertVless(uri){
  const outbound={tag:'proxy',protocol:'vless',settings:{vnext:[{address:host,port:port,users:[user]}]},streamSettings:stream};
  return fixedConfig(outbound);
 }
-function validateShape(config){
- const ok=(Array.isArray(config.inbounds)&&config.inbounds.some(x=>x.protocol==='dokodemo-door'&&Number(x.port)===9898&&x.streamSettings&&x.streamSettings.sockopt&&x.streamSettings.sockopt.tproxy==='tproxy')&&Array.isArray(config.outbounds)&&config.outbounds.length);
- if(!ok)throw new Error(tr('invalid'));
+function validateShape(config,engine){
+ if(!config||!Array.isArray(config.inbounds)||!Array.isArray(config.outbounds)||!config.outbounds.length)throw new Error(tr('coreFail'));
+ const accepted=engine==='xray'
+  ? config.inbounds.some(x=>x.protocol==='dokodemo-door'&&Number(x.port)===9898&&x.streamSettings?.sockopt?.tproxy==='tproxy')
+  : config.inbounds.some(x=>x.type==='tproxy'&&Number(x.listen_port)===9898);
+ if(!accepted)throw new Error(tr('coreFail'));
 }
 async function checkUpdate(silent=false){
   const message=E('updateMsg');
@@ -202,22 +286,175 @@ async function pollUpdateStatus(){
   }
 }
 function b64utf8(value){const bytes=new TextEncoder().encode(value);let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
+
+const ROOT_ALLOWED=new Set([
+ DATA+'/config.json',DATA+'/singbox.json',DATA+'/config.candidate.json',DATA+'/engine.txt',
+ DATA+'/nodes.json',DATA+'/nodes.candidate.json',DATA+'/selected.id',DATA+'/subscription.url'
+]);
+function allowPath(p){if(!ROOT_ALLOWED.has(p))throw new Error('Invalid private file path');return p;}
+function decodeParts(parts){
+ let count=0;
+ const decoded=parts.map(part=>{
+   const binary=atob(part.trim());
+   const bytes=Uint8Array.from(binary,x=>x.charCodeAt(0));
+   count+=bytes.length;return bytes;
+ });
+ const joined=new Uint8Array(count);
+ let offset=0;for(const data of decoded){joined.set(data,offset);offset+=data.length;}
+ return new TextDecoder('utf-8',{fatal:true}).decode(joined);
+}
+async function readRootFile(path){
+ allowPath(path);
+ const size=Number(await exec('test -f '+path+' && wc -c < '+path+' || echo 0'));
+ if(!Number.isInteger(size)||size<0||size>1500000)throw new Error('File too large');
+ if(!size)return '';
+ const parts=[];
+ for(let n=0;n<Math.ceil(size/16384);n++){
+   parts.push(await exec("dd if="+path+" bs=16384 skip="+n+" count=1 2>/dev/null | base64 | tr -d '[:space:]'"));
+ }
+ return decodeParts(parts);
+}
+async function writeRootFile(path,content){
+ allowPath(path);
+ const bytes=new TextEncoder().encode(String(content));
+ if(bytes.length>1200000)throw new Error('Too much data');
+ await exec(': > '+path+' && chmod 600 '+path);
+ for(let i=0;i<bytes.length;i+=8192){
+   const sub=bytes.slice(i,i+8192);
+   let binary='';for(const x of sub)binary+=String.fromCharCode(x);
+   const data=btoa(binary);
+   await exec("printf '%s' '"+data+"' | base64 -d >> "+path);
+ }
+}
+function renderNodes(){
+ const picker=E('nodePicker'),desired=selectedNodeId||picker.value;
+ while(picker.firstChild)picker.removeChild(picker.firstChild);
+ for(const n of nodes){
+   const o=document.createElement('option');
+   o.value=n.id;
+   o.textContent=n.name+' · '+n.type.toUpperCase();
+   picker.appendChild(o);
+ }
+ if(nodes.some(n=>n.id===desired))picker.value=desired;
+ else if(nodes.length)picker.value=nodes[0].id;
+ E('nodeInfo').textContent=nodes.length?tr('nodesCount')+nodes.length:tr('nodesEmpty');
+ disableButtons();
+}
+function mergeNodes(incoming){
+ const ids=new Set(nodes.map(n=>n.id));let count=0;
+ for(const n of incoming){
+   if(ids.has(n.id))continue;
+   nodes.push(n);ids.add(n.id);count++;
+ }
+ renderNodes();return count;
+}
+async function saveNodes(){
+ await writeRootFile(DATA+'/nodes.candidate.json',JSON.stringify(nodes));
+ await exec('mv -f '+DATA+'/nodes.candidate.json '+DATA+'/nodes.json && chmod 600 '+DATA+'/nodes.json');
+ renderNodes();
+}
+async function loadNodes(){
+ try{
+   const raw=await readRootFile(DATA+'/nodes.json');
+   const parsed=raw?JSON.parse(raw):[];
+   nodes=Array.isArray(parsed)?parsed.filter(n=>n&&typeof n.name==='string'&&n.outbound&&n.engine==='sing-box').slice(0,500):[];
+ }catch(e){nodes=[];say(tr('errors')+e.message,true);}
+ try{selectedNodeId=(await readRootFile(DATA+'/selected.id')).trim();}catch(e){}
+ try{E('subUrl').value=await readRootFile(DATA+'/subscription.url');}catch(e){}
+ renderNodes();
+}
+async function loadConfig(){
+ const engine=E('engine').value;
+ const path=engine==='sing-box'?DATA+'/singbox.json':DATA+'/config.json';
+ const content=await readRootFile(path);
+ E('config').value=content||'';
+ if(!content)say(tr('configMissing'));
+}
+async function downloadSubscription(){
+ if(subscriptionRunning)return;
+ const url=E('subUrl').value.trim();
+ if(!/^https:\/\//i.test(url))throw new Error(tr('subNoHttps'));
+ subscriptionRunning=true;
+ try{
+   E('nodeInfo').textContent=tr('subLoad');
+   await writeRootFile(DATA+'/subscription.url',url);
+   const msg=await exec('/system/bin/sh '+MOD+'/scripts/subscription.sh fetch');
+   if(!/^FETCHED \d+$/.test(msg))throw new Error(msg||'Subscription download failed');
+   const rawCount=await exec('/system/bin/sh '+MOD+'/scripts/subscription.sh chunks');
+   const count=Number(rawCount);
+   if(!Number.isInteger(count)||count<1||count>64)throw new Error('Bad subscription size');
+   const chunks=[];
+   E('nodeInfo').textContent=tr('subRead');
+   for(let i=0;i<count;i++){
+     chunks.push(await exec('/system/bin/sh '+MOD+'/scripts/subscription.sh chunk '+i));
+   }
+   const response=decodeParts(chunks);
+   const result=Q2RNodes.parseSubscription(response,window.jsyaml);
+   if(!result.nodes.length)throw new Error(tr('unsupportedNodes')+(result.errors[0]?': '+result.errors[0]:''));
+   const added=mergeNodes(result.nodes);
+   await saveNodes();
+   say(tr('subDone')+' '+tr('nodesAdded')+added+'. '+tr('nodesErrors')+result.errors.length);
+ } finally {subscriptionRunning=false;renderNodes();}
+}
+
 E('lang').onchange=()=>{lang=E('lang').value;try{localStorage.setItem('q2r-lang',lang);}catch(e){}translate();};
 E('start').onclick=()=>locked(async()=>{say(await exec(CMD+' start'));await refresh();});
 E('stop').onclick=()=>locked(async()=>{say(await exec(CMD+' stop'));await refresh();});
 E('refresh').onclick=()=>locked(async()=>{await refresh();say('OK');});
 E('hotspot').onchange=()=>locked(async()=>{const selected=E('hotspot').checked;try{say(await exec(CMD+' hotspot '+(selected?'on':'off')));}finally{await refresh();}});
-E('convert').onclick=()=>{try{E('config').value=JSON.stringify(convertVless(E('vless').value),null,2);say(tr('converted'));}catch(e){say(e.message,true);}};
-E('load').onclick=()=>locked(async()=>{E('config').value=await exec('cat '+DATA+'/config.json');say('OK');});
-E('save').onclick=()=>locked(async()=>{
- if(status==='running')throw new Error(tr('saveFirst'));
- const raw=E('config').value.trim();if(raw.length>40000)throw new Error('Configuration too large (max 40KB)');
- const obj=JSON.parse(raw);validateShape(obj);
- const encoded=b64utf8(JSON.stringify(obj,null,2));
- // Only fixed paths and base64-encoded content ever enter the root shell.
- const command="(printf '%s' '"+encoded+"' | base64 -d > "+DATA+"/config.candidate) && "+
-   CMD+" validate && mv -f "+DATA+"/config.candidate "+DATA+"/config.json && chmod 600 "+DATA+"/config.json";
- await exec(command);say(tr('saved'));
+async function saveConfig(){
+ if(status==='running')throw new Error(tr('stopBeforeChange'));
+ const engine=E('engine').value;
+ if(engine!=='xray'&&engine!=='sing-box')throw new Error('Invalid core');
+ const raw=E('config').value.trim();
+ if(raw.length>160000)throw new Error('Configuration too large (160KB max)');
+ const obj=JSON.parse(raw);
+ validateShape(obj,engine);
+ const target=engine==='xray'?DATA+'/config.json':DATA+'/singbox.json';
+ await writeRootFile(DATA+'/config.candidate.json',JSON.stringify(obj,null,2));
+ await exec(CMD+' validate '+engine);
+ await exec('mv -f '+DATA+'/config.candidate.json '+target+' && chmod 600 '+target+
+   " && printf '%s' '"+engine+"' > "+DATA+'/engine.txt && chmod 600 '+DATA+'/engine.txt');
+ await refresh();
+ say(tr('configSaved')+engine);
+}
+E('load').onclick=()=>locked(async()=>{await loadConfig();say('OK');});
+E('save').onclick=()=>locked(saveConfig);
+E('engine').onchange=()=>locked(async()=>{if(status==='running')throw new Error(tr('stopBeforeChange'));await loadConfig();});
+E('importNodes').onclick=()=>locked(async()=>{
+ const input=E('sourceText').value.trim();
+ if(!input)throw new Error(tr('noLink'));
+ if(/^https:\/\//i.test(input)&&!input.includes('\n')){
+   E('subUrl').value=input;
+   await downloadSubscription();
+   return;
+ }
+ const result=Q2RNodes.parseSubscription(input,window.jsyaml);
+ if(!result.nodes.length)throw new Error(tr('unsupportedNodes')+(result.errors[0]?': '+result.errors[0]:''));
+ const added=mergeNodes(result.nodes);
+ await saveNodes();
+ E('sourceText').value='';
+ say(tr('nodesAdded')+added+'. '+tr('nodesErrors')+result.errors.length+(result.errors.length?' ('+result.errors.slice(0,2).join('; ')+')':''));
+});
+E('refreshSub').onclick=()=>locked(downloadSubscription);
+E('useNode').onclick=()=>locked(async()=>{
+ if(status==='running')throw new Error(tr('stopBeforeChange'));
+ const node=nodes.find(n=>n.id===E('nodePicker').value);
+ if(!node)throw new Error(tr('nodeSelectFirst'));
+ E('engine').value='sing-box';
+ E('config').value=JSON.stringify(Q2RNodes.makeConfig(node),null,2);
+ await saveConfig();
+ selectedNodeId=node.id;
+ await writeRootFile(DATA+'/selected.id',selectedNodeId);
+ say(tr('nodeChosen')+node.name);
+});
+E('removeNode').onclick=()=>locked(async()=>{
+ if(status==='running')throw new Error(tr('stopBeforeChange'));
+ const id=E('nodePicker').value;
+ nodes=nodes.filter(n=>n.id!==id);
+ if(selectedNodeId===id)selectedNodeId='';
+ await saveNodes();
+ say(tr('nodeRemoved'));
 });
 E('checkUpdate').onclick=()=>{checkUpdate(false);};
 E('installUpdate').onclick=()=>locked(async()=>{
@@ -232,7 +469,16 @@ E('installUpdate').onclick=()=>locked(async()=>{
 });
 E('readLogs').onclick=()=>locked(async()=>{E('logText').textContent=await exec('tail -n 65 '+DATA+'/run.log 2>/dev/null || true');say('OK');});
 translate();E('updateMsg').textContent=tr('updateDefault');say(tr('waiting'));
-locked(async()=>{await refresh();E('config').value=await exec('cat '+DATA+'/config.json');initialized=true;say(tr('direct'));});
+locked(async()=>{
+ await refresh();
+ await loadNodes();
+ let core='xray';
+ try{core=(await readRootFile(DATA+'/engine.txt')).trim()||'xray';}catch(e){}
+ E('engine').value=core==='sing-box'?'sing-box':'xray';
+ await loadConfig();
+ initialized=true;
+ say(tr('direct'));
+});
 setInterval(()=>{if(initialized&&!working&&document.visibilityState==='visible')refresh().catch(()=>{});},12000);
 setTimeout(()=>checkUpdate(true),3000);
 </script>
