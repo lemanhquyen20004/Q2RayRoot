@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const nodes=require('../webroot/nodes.js');
 const yaml=require('../webroot/vendor/js-yaml.min.js');
 const uuid='12345678-1234-4234-8234-123456789abc';
-const vless='vless://'+uuid+'@example.org:443?security=reality&sni=front.example.org&pbk=examplePubKey&sid=1234&fp=chrome&type=tcp#VN-VLESS';
+const vless='vless://'+uuid+'@example.org:443?security=reality&sni=front.example.org&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=1234&fp=chrome&type=tcp#VN-VLESS';
 const trojan='trojan://secret%24pass@trojan.example.org:443?security=tls&sni=t.example.org&type=ws&path=%2Fws&host=front.example.org#Test-Trojan';
 const hy2='hysteria2://a%3Ab@h.example.org:8443?sni=hy.example.org&obfs=salamander&obfs-password=obfssecret&upmbps=50&downmbps=100#Hysteria2';
 const hy2Short='hy2://hello@h.example.org:443?sni=h.example.org#HY2';
