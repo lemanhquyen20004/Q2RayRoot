@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1525">
+<title>Q2Ray Root</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;--bg:#090f1a;--surface:#111b2b;--raised:#192538;--line:#29384c;--fg:#e9f3ff;--muted:#96a8bf;--cyan:#47d9f5;--green:#67e7b4;--red:#ff8996}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% -10%,#163c57 0,transparent 48%),var(--bg);color:var(--fg);min-height:100vh}
+.shell{max-width:860px;margin:auto;padding:22px 16px 48px}.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(140deg,#49e4ee,#3f7fff);display:grid;place-items:center;color:#092032;font-size:25px;font-weight:900;box-shadow:0 8px 35px #1a8ebc55}
+h1{font-size:21px;letter-spacing:.1px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:4px}select,input,textarea{color:var(--fg);background:#0b1523;border:1px solid #2c4057;border-radius:11px;padding:12px}
+select{max-width:145px;font-size:13px}.card{background:linear-gradient(155deg,#162337,#101a2a);border:1px solid #294057;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 12px 28px #01071222}
+.eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--cyan);font-weight:800}
+.hero h2{font-size:28px;margin:10px 0 4px}.muted{color:var(--muted);font-size:13px;line-height:1.55}
+.status{display:inline-flex;align-items:center;gap:8px;border:1px solid #355169;border-radius:50px;padding:7px 12px;font-size:12px;font-weight:700;background:#14283d}
+.dot{height:9px;width:9px;border-radius:50%;background:#f2ae67}.status.running .dot{background:var(--green);box-shadow:0 0 12px #67e7b4aa}.status.missing .dot{background:var(--red)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:19px}button{font-family:inherit;cursor:pointer;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800;border:1px solid #375067;color:var(--fg);background:#21344a;transition:transform .15s,background .15s}
+button:active{transform:scale(.98)}button.primary{background:linear-gradient(120deg,#47def1,#3189f2);color:#071724;border:0}button.danger{border-color:#81404d;background:#472833;color:#ffd5d9}
+button:disabled{opacity:.45;cursor:wait}.title{font-size:16px;font-weight:800;margin:0 0 9px}
+.toggle{display:flex;align-items:center;gap:10px;justify-content:space-between}.toggle input{width:21px;height:21px;accent-color:#4bd8f1}
+textarea{width:100%;min-height:180px;resize:vertical;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+input[type=text]{width:100%;font-size:14px}.spacer{height:13px}.small{font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+pre{white-space:pre-wrap;word-break:break-word;color:#afd5e3;background:#081321;border:1px solid #26394c;border-radius:12px;padding:12px;max-height:230px;overflow:auto;font-size:11px;line-height:1.55}
+#notice{min-height:32px;padding:9px 12px;color:var(--cyan);font-size:12px;line-height:1.55}
+footer{text-align:center;color:#7991a8;font-size:11px;line-height:1.6;padding-top:14px}
+code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.hero h2{font-size:23px}.shell{padding-top:17px}.card{padding:15px}.actions button{flex:1}}
+</style></head>
+<body><div class="shell">
+<header class="header">
+<div class="brand"><div class="logo">Q<span style="font-size:16px">2</span></div><div><h1>Q2Ray Root</h1><div class="sub">v0.0.1 · ROOT PROXY MANAGER</div></div></div>
+<select id="lang" aria-label="Language"><option value="vi">Tiếng Việt</option><option value="en">English</option></select>
+</header>
+<section class="card hero">
+<div class="eyebrow" data-t="overview">Trạng thái hệ thống</div>
+<h2 data-t="headline">Điều khiển mạng an toàn</h2>
+<p class="muted" data-t="intro">Chạy Xray bằng TPROXY. Khi dừng, module chỉ xóa những quy tắc mạng do chính nó tạo.</p>
+<div id="state" class="status"><span class="dot"></span><span id="stateText">...</span></div>
+<div class="actions"><button id="start" class="primary" data-t="start">Bật Xray</button><button id="stop" class="danger" data-t="stop">Tắt / Direct</button><button id="refresh" data-t="refresh">Làm mới</button></div>
+</section>
+<div class="grid">
+<section class="card">
+<h3 class="title" data-t="sharing">Chia sẻ Proxy qua Hotspot</h3>
+<div class="toggle"><span class="muted" data-t="sharingInfo">Chỉ định tuyến thiết bị nhận Hotspot khi bật tùy chọn này.</span><input type="checkbox" id="hotspot"></div>
+<p id="hotspotStatus" class="muted small"></p>
+</section>
+<section class="card">
+<h3 class="title" data-t="safeTitle">Bảo vệ mạng 4G / Wi-Fi</h3>
+<p class="muted" data-t="safeInfo">Mặc định không tự bật proxy sau khi cài hoặc khởi động lại. Khi core lỗi, watchdog tự dọn rule và chuyển về Direct.</p>
+<p class="muted small" data-t="testNotice">Bản thử nghiệm: chưa xác nhận hoạt động trên Redmi Note 8T.</p>
+</section>
+</div>
+<section class="card">
+<h3 class="title" data-t="importTitle">Nhập VLESS / Cấu hình Xray</h3>
+<p class="muted" data-t="importInfo">Dán một link VLESS sử dụng TLS hoặc REALITY để tạo cấu hình; hoặc sửa trực tiếp JSON bên dưới. Dừng Xray trước khi lưu.</p>
+<input type="text" id="vless" autocomplete="off" spellcheck="false" placeholder="vless://uuid@server:443?...">
+<div class="actions"><button id="convert" data-t="convert">Chuyển VLESS → Xray</button><button id="load" data-t="load">Tải cấu hình đang lưu</button></div>
+<div class="spacer"></div>
+<textarea id="config" spellcheck="false" aria-label="Xray configuration JSON"></textarea>
+<div class="actions"><button id="save" class="primary" data-t="save">Lưu &amp; kiểm tra cấu hình</button></div>
+<p class="muted small" data-t="privacy">Mã node được lưu trên điện thoại. Không đưa link chứa UUID của bạn lên GitHub.</p>
+</section>
+<section class="card">
+<h3 class="title" data-t="logs">Nhật ký hoạt động</h3>
+<div class="actions" style="margin:0 0 12px"><button id="readLogs" data-t="readLogs">Xem log gần nhất</button></div>
+<pre id="logText">—</pre>
+</section>
+<div id="notice" role="status" aria-live="polite"></div>
+<footer>© 2026 lemanhquyen20004 · Q2Ray Root<br><span data-t="footer">Mã gốc thuộc chủ sở hữu tương ứng · Xray-core được cấp phép riêng.</span></footer>
+</div>
+<script>
+'use strict';
+const MOD='/data/adb/modules/q2rayroot';
+const DATA='/data/adb/q2rayroot';
+const CMD='/system/bin/sh '+MOD+'/scripts/q2r.sh';
+const dict={
+vi:{overview:'TRẠNG THÁI HỆ THỐNG',headline:'Điều khiển mạng an toàn',intro:'Chạy Xray bằng TPROXY. Khi dừng, module chỉ xóa những quy tắc mạng do chính nó tạo.',start:'Bật Xray',stop:'Tắt / Direct',refresh:'Làm mới',sharing:'Chia sẻ Proxy qua Hotspot',sharingInfo:'Chỉ định tuyến thiết bị nhận Hotspot khi bật tùy chọn này.',safeTitle:'Bảo vệ mạng 4G / Wi-Fi',safeInfo:'Mặc định không tự bật proxy sau khi cài hoặc khởi động lại. Nếu core lỗi, watchdog tự dọn rule và chuyển về Direct.',testNotice:'Bản thử nghiệm: chưa xác nhận hoạt động trên Redmi Note 8T.',importTitle:'Nhập VLESS / Cấu hình Xray',importInfo:'Dán một link VLESS dùng TLS hoặc REALITY để tạo cấu hình; hoặc sửa trực tiếp JSON bên dưới. Dừng Xray trước khi lưu.',convert:'Chuyển VLESS → Xray',load:'Tải cấu hình đang lưu',save:'Lưu & kiểm tra cấu hình',privacy:'Node được lưu trên điện thoại. Không đẩy link chứa UUID của bạn lên GitHub.',logs:'Nhật ký hoạt động',readLogs:'Xem log gần nhất',footer:'Bản quyền bên thứ ba được giữ nguyên · Xray-core có giấy phép riêng.',running:'Đang chạy',stopped:'Đã tắt · Direct',missing:'Thiếu Xray core',error:'Không thể truy cập quyền root WebUI. Dùng KsuWebUIStandalone hoặc trình quản lý tương thích.',busy:'Đang xử lý, vui lòng đợi...',saved:'Đã lưu cấu hình hợp lệ.',saveFirst:'Hãy tắt Xray trước khi thay đổi cấu hình.',invalid:'Cấu hình chưa hợp lệ hoặc thiếu inbound TPROXY port 9898.',converted:'Đã chuyển sang JSON. Bấm Lưu để kiểm tra.',waitAp:'Đang chờ phát Hotspot.',ap:'Giao diện Hotspot:',noAp:'Hotspot đã tắt.',failed:'Thao tác thất bại: ',direct:'Cấu hình ví dụ ban đầu chạy Direct, chưa sử dụng node Proxy.',waiting:'Đang đọc trạng thái...'},
+en:{overview:'SYSTEM STATUS',headline:'Safer network controls',intro:'Xray transparently proxies through TPROXY. Stopping removes only this module’s own network rules.',start:'Start Xray',stop:'Stop / Direct',refresh:'Refresh',sharing:'Share proxy to Hotspot',sharingInfo:'Only intercept tethered clients when this option is enabled.',safeTitle:'Protect mobile data / Wi-Fi',safeInfo:'Interception is never auto-enabled on installation or reboot. The watchdog restores Direct on core failure.',testNotice:'Technical preview: not yet tested on Redmi Note 8T.',importTitle:'VLESS / Xray configuration',importInfo:'Paste a TLS or REALITY VLESS link to generate Xray JSON, or edit the raw JSON below. Stop Xray before saving.',convert:'Convert VLESS → Xray',load:'Load saved configuration',save:'Save & validate configuration',privacy:'Nodes remain on your phone. Do not publish subscription UUIDs on GitHub.',logs:'Activity log',readLogs:'Read latest log',footer:'Third-party copyrights remain with their owners · Xray-core has a separate license.',running:'Running',stopped:'Stopped · Direct',missing:'Xray core missing',error:'Root WebUI interface unavailable. Use a compatible manager or KsuWebUIStandalone.',busy:'Working, please wait...',saved:'Configuration validated and saved.',saveFirst:'Stop Xray before modifying the active configuration.',invalid:'Invalid configuration or missing TPROXY inbound on port 9898.',converted:'Generated JSON. Click Save to validate.',waitAp:'Waiting for Hotspot.',ap:'Hotspot interface:',noAp:'Hotspot disabled.',failed:'Operation failed: ',direct:'The bundled sample uses Direct until you import a proxy node.',waiting:'Reading status...'}
+};
+let lang='vi',working=false,status='stopped',initialized=false;
+try {lang=localStorage.getItem('q2r-lang')==='en'?'en':'vi';} catch(e){}
+const E=id=>document.getElementById(id);
+const tr=k=>(dict[lang]&&dict[lang][k])||k;
+function say(message,err){E('notice').style.color=err?'#ff8996':'#47d9f5';E('notice').textContent=message;}
+function translate(){document.documentElement.lang=lang;E('lang').value=lang;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=tr(el.getAttribute('data-t'));});renderStatus();}
+function exec(command){
+ return new Promise((resolve,reject)=>{
+  if(!window.ksu||typeof window.ksu.exec!=='function'){reject(new Error(tr('error')));return;}
+  const id='q2cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const timeout=setTimeout(()=>{delete window[id];reject(new Error('Timeout (25s)'));},25000);
+  window[id]=(errno,stdout,stderr)=>{clearTimeout(timeout);delete window[id];if(Number(errno)===0)resolve(String(stdout||'').trim());else reject(new Error(String(stderr||stdout||'exit '+errno).trim()));};
+  try{window.ksu.exec(command,'{}',id);}catch(e){clearTimeout(timeout);delete window[id];reject(e);}
+ });
+}
+async function locked(task){if(working)return;working=true;disableButtons();say(tr('busy'));try{await task();}catch(e){say(tr('failed')+e.message,true);}finally{working=false;disableButtons();}}
+function disableButtons(){E('start').disabled=working||status==='running';E('stop').disabled=working||status!=='running';E('save').disabled=working||status==='running';E('hotspot').disabled=working;}
+function renderStatus(){
+ const el=E('state');el.className='status'+(status==='running'?' running':status==='missing-core'?' missing':'');
+ E('stateText').textContent=status==='running'?tr('running'):status==='missing-core'?tr('missing'):tr('stopped');
+ disableButtons();
+}
+async function refresh(){
+ const s=await exec(CMD+' status');status=s||'stopped';renderStatus();
+ const hs=await exec(CMD+' hotspot status');E('hotspot').checked=hs.startsWith('on');
+ E('hotspotStatus').textContent=hs.startsWith('on')?(hs.slice(3).trim()?tr('ap')+' '+hs.slice(3).trim():tr('waitAp')):tr('noAp');
+}
+function fixedConfig(outbound){
+ return {log:{loglevel:'warning'},
+ inbounds:[{tag:'tproxy-in',listen:'0.0.0.0',port:9898,protocol:'dokodemo-door',settings:{network:'tcp,udp',followRedirect:true},sniffing:{enabled:true,destOverride:['http','tls']},streamSettings:{sockopt:{tproxy:'tproxy'}}}],
+ outbounds:[outbound,{tag:'direct',protocol:'freedom'},{tag:'block',protocol:'blackhole'}],
+ routing:{domainStrategy:'AsIs',rules:[{type:'field',ip:['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16','127.0.0.0/8'],outboundTag:'direct'}]}};
+}
+function convertVless(uri){
+ const u=new URL(uri.trim());if(u.protocol!=='vless:')throw new Error('Expected vless://');
+ const q=u.searchParams;const uuid=decodeURIComponent(u.username);const port=Number(u.port);
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid)||port<1||port>65535)throw new Error('Invalid UUID or port');
+ const sec=q.get('security')||'none';if(sec!=='tls'&&sec!=='reality')throw new Error('Use TLS or REALITY (plaintext VLESS is not supported)');
+ const net=q.get('type')||'tcp';if(!['tcp','ws','grpc','xhttp'].includes(net))throw new Error('Unsupported transport: '+net);
+ const host=u.hostname.replace(/^\[|\]$/g,'');
+ const stream={network:net,security:sec};
+ if(net==='ws')stream.wsSettings={path:q.get('path')||'/',headers:q.get('host')?{Host:q.get('host')}:{}} ;
+ if(net==='grpc')stream.grpcSettings={serviceName:q.get('serviceName')||''};
+ if(net==='xhttp')stream.xhttpSettings={path:q.get('path')||'/',host:q.get('host')||''};
+ if(sec==='tls')stream.tlsSettings={serverName:q.get('sni')||host,allowInsecure:false,fingerprint:q.get('fp')||'chrome'};
+ if(sec==='reality'){
+  if(!q.get('pbk'))throw new Error('REALITY public key (pbk) missing');
+  stream.realitySettings={serverName:q.get('sni')||host,publicKey:q.get('pbk'),shortId:q.get('sid')||'',spiderX:q.get('spx')||'',fingerprint:q.get('fp')||'chrome'};
+ }
+ const user={id:uuid,encryption:'none'};if(q.get('flow'))user.flow=q.get('flow');
+ const outbound={tag:'proxy',protocol:'vless',settings:{vnext:[{address:host,port:port,users:[user]}]},streamSettings:stream};
+ return fixedConfig(outbound);
+}
+function validateShape(config){
+ const ok=(Array.isArray(config.inbounds)&&config.inbounds.some(x=>x.protocol==='dokodemo-door'&&Number(x.port)===9898&&x.streamSettings&&x.streamSettings.sockopt&&x.streamSettings.sockopt.tproxy==='tproxy')&&Array.isArray(config.outbounds)&&config.outbounds.length);
+ if(!ok)throw new Error(tr('invalid'));
+}
+function b64utf8(value){const bytes=new TextEncoder().encode(value);let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
+E('lang').onchange=()=>{lang=E('lang').value;try{localStorage.setItem('q2r-lang',lang);}catch(e){}translate();};
+E('start').onclick=()=>locked(async()=>{say(await exec(CMD+' start'));await refresh();});
+E('stop').onclick=()=>locked(async()=>{say(await exec(CMD+' stop'));await refresh();});
+E('refresh').onclick=()=>locked(async()=>{await refresh();say('OK');});
+E('hotspot').onchange=()=>locked(async()=>{const selected=E('hotspot').checked;try{say(await exec(CMD+' hotspot '+(selected?'on':'off')));}finally{await refresh();}});
+E('convert').onclick=()=>{try{E('config').value=JSON.stringify(convertVless(E('vless').value),null,2);say(tr('converted'));}catch(e){say(e.message,true);}};
+E('load').onclick=()=>locked(async()=>{E('config').value=await exec('cat '+DATA+'/config.json');say('OK');});
+E('save').onclick=()=>locked(async()=>{
+ if(status==='running')throw new Error(tr('saveFirst'));
+ const raw=E('config').value.trim();if(raw.length>40000)throw new Error('Configuration too large (max 40KB)');
+ const obj=JSON.parse(raw);validateShape(obj);
+ const encoded=b64utf8(JSON.stringify(obj,null,2));
+ // Only fixed paths and base64-encoded content ever enter the root shell.
+ const command="(printf '%s' '"+encoded+"' | base64 -d > "+DATA+"/config.candidate) && "+
+   CMD+" validate && mv -f "+DATA+"/config.candidate "+DATA+"/config.json && chmod 600 "+DATA+"/config.json";
+ await exec(command);say(tr('saved'));
+});
+E('readLogs').onclick=()=>locked(async()=>{E('logText').textContent=await exec('tail -n 65 '+DATA+'/run.log 2>/dev/null || true');say('OK');});
+translate();say(tr('waiting'));
+locked(async()=>{await refresh();E('config').value=await exec('cat '+DATA+'/config.json');initialized=true;say(tr('direct'));});
+setInterval(()=>{if(initialized&&!working&&document.visibilityState==='visible')refresh().catch(()=>{});},12000);
+</script>
+</body></html>

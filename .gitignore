@@ -1,0 +1,6 @@
+dist/
+.tmp-build/
+*.zip
+.DS_Store
+*.log
+node_modules/

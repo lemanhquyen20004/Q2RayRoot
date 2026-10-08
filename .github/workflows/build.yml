@@ -1,0 +1,60 @@
+name: Q2Ray Root • checks and ARM64 package
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          set -e
+          for f in customize.sh service.sh action.sh uninstall.sh scripts/q2r.sh; do
+            sh -n "$f"
+          done
+          bash -n build.sh
+      - name: Check WebUI JavaScript and config
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          html=Path('webroot/index.html').read_text()
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S|re.I)
+          assert scripts, 'Missing WebUI script'
+          Path('/tmp/q2ray-webui.js').write_text('\n'.join(scripts))
+          cfg=json.loads(Path('config/default.json').read_text())
+          assert any(i.get('protocol')=='dokodemo-door' and i.get('port')==9898 for i in cfg['inbounds'])
+          assert 'Tiếng Việt' in html and 'English' in html
+          assert 'localStorage' in html and 'hotspot' in html
+          print('WebUI and Xray template checks passed')
+          PY
+          node --check /tmp/q2ray-webui.js
+      - name: Confirm no destructive global firewall reset
+        run: |
+          ! grep -En 'iptables.* -F (INPUT|OUTPUT|FORWARD)|ip route (flush|replace) default|disable_ipv6=1' scripts/q2r.sh
+  package:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installable ARM64 Magisk ZIP
+        run: bash build.sh
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Q2RayRoot-arm64
+          path: dist/Q2RayRoot-*.zip
+          if-no-files-found: error
+      - name: Attach ARM64 ZIP to a manually published GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" dist/Q2RayRoot-*.zip --clobber
