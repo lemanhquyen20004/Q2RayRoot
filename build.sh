@@ -32,4 +32,5 @@ chmod 0755 "$tmp/module/bin/xray" "$tmp/module/customize.sh" "$tmp/module/servic
 package="Q2RayRoot-${version}-arm64.zip"
 (cd "$tmp/module" && zip -q -r "$root/dist/$package" .)
 unzip -tqq "$root/dist/$package"
-printf 'Ready: %s\n' "$root/dist/$package"
+(cd "$root/dist" && sha256sum "$package" > "$package.sha256")
+printf 'Ready: %s (SHA-256 included)\n' "$root/dist/$package"

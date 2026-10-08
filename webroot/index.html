@@ -29,7 +29,7 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 </style></head>
 <body><div class="shell">
 <header class="header">
-<div class="brand"><div class="logo">Q<span style="font-size:16px">2</span></div><div><h1>Q2Ray Root</h1><div class="sub">v0.0.1 · ROOT PROXY MANAGER</div></div></div>
+<div class="brand"><div class="logo">Q<span style="font-size:16px">2</span></div><div><h1>Q2Ray Root</h1><div class="sub">v0.0.2 · ROOT PROXY MANAGER</div></div></div>
 <select id="lang" aria-label="Language"><option value="vi">Tiếng Việt</option><option value="en">English</option></select>
 </header>
 <section class="card hero">
@@ -61,6 +61,17 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 <div class="actions"><button id="save" class="primary" data-t="save">Lưu &amp; kiểm tra cấu hình</button></div>
 <p class="muted small" data-t="privacy">Mã node được lưu trên điện thoại. Không đưa link chứa UUID của bạn lên GitHub.</p>
 </section>
+<section class="card" id="update-card">
+<div class="eyebrow" data-t="updateTag">CẬP NHẬT</div>
+<h3 class="title" data-t="updateTitle">Cập nhật Q2Ray Root</h3>
+<p id="updateMsg" class="muted" role="status" aria-live="polite">Kiểm tra bản mới từ GitHub Releases.</p>
+<div class="actions">
+  <button id="checkUpdate" data-t="checkUpdate">Kiểm tra cập nhật</button>
+  <button id="installUpdate" class="primary" data-t="installUpdate" disabled>Tải & cài đặt</button>
+</div>
+<p class="muted small" data-t="updateSafety">Chỉ tải file từ GitHub của dự án, kiểm tra SHA-256 và yêu cầu khởi động lại. Nếu không có Magisk CLI, hãy cập nhật trong trình quản lý root.</p>
+<a href="https://github.com/lemanhquyen20004/Q2RayRoot/releases" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);font-size:12px" data-t="releaseLink">Xem danh sách phiên bản</a>
+</section>
 <section class="card">
 <h3 class="title" data-t="logs">Nhật ký hoạt động</h3>
 <div class="actions" style="margin:0 0 12px"><button id="readLogs" data-t="readLogs">Xem log gần nhất</button></div>
@@ -74,11 +85,31 @@ code{background:#1c3044;border-radius:5px;padding:2px 5px;color:#a7e8f4}
 const MOD='/data/adb/modules/q2rayroot';
 const DATA='/data/adb/q2rayroot';
 const CMD='/system/bin/sh '+MOD+'/scripts/q2r.sh';
+const UPDATE_CMD='/system/bin/sh '+MOD+'/scripts/update.sh';
 const dict={
 vi:{overview:'TRẠNG THÁI HỆ THỐNG',headline:'Điều khiển mạng an toàn',intro:'Chạy Xray bằng TPROXY. Khi dừng, module chỉ xóa những quy tắc mạng do chính nó tạo.',start:'Bật Xray',stop:'Tắt / Direct',refresh:'Làm mới',sharing:'Chia sẻ Proxy qua Hotspot',sharingInfo:'Chỉ định tuyến thiết bị nhận Hotspot khi bật tùy chọn này.',safeTitle:'Bảo vệ mạng 4G / Wi-Fi',safeInfo:'Mặc định không tự bật proxy sau khi cài hoặc khởi động lại. Nếu core lỗi, watchdog tự dọn rule và chuyển về Direct.',testNotice:'Bản thử nghiệm: chưa xác nhận hoạt động trên Redmi Note 8T.',importTitle:'Nhập VLESS / Cấu hình Xray',importInfo:'Dán một link VLESS dùng TLS hoặc REALITY để tạo cấu hình; hoặc sửa trực tiếp JSON bên dưới. Dừng Xray trước khi lưu.',convert:'Chuyển VLESS → Xray',load:'Tải cấu hình đang lưu',save:'Lưu & kiểm tra cấu hình',privacy:'Node được lưu trên điện thoại. Không đẩy link chứa UUID của bạn lên GitHub.',logs:'Nhật ký hoạt động',readLogs:'Xem log gần nhất',footer:'Bản quyền bên thứ ba được giữ nguyên · Xray-core có giấy phép riêng.',running:'Đang chạy',stopped:'Đã tắt · Direct',missing:'Thiếu Xray core',error:'Không thể truy cập quyền root WebUI. Dùng KsuWebUIStandalone hoặc trình quản lý tương thích.',busy:'Đang xử lý, vui lòng đợi...',saved:'Đã lưu cấu hình hợp lệ.',saveFirst:'Hãy tắt Xray trước khi thay đổi cấu hình.',invalid:'Cấu hình chưa hợp lệ hoặc thiếu inbound TPROXY port 9898.',converted:'Đã chuyển sang JSON. Bấm Lưu để kiểm tra.',waitAp:'Đang chờ phát Hotspot.',ap:'Giao diện Hotspot:',noAp:'Hotspot đã tắt.',failed:'Thao tác thất bại: ',direct:'Cấu hình ví dụ ban đầu chạy Direct, chưa sử dụng node Proxy.',waiting:'Đang đọc trạng thái...'},
 en:{overview:'SYSTEM STATUS',headline:'Safer network controls',intro:'Xray transparently proxies through TPROXY. Stopping removes only this module’s own network rules.',start:'Start Xray',stop:'Stop / Direct',refresh:'Refresh',sharing:'Share proxy to Hotspot',sharingInfo:'Only intercept tethered clients when this option is enabled.',safeTitle:'Protect mobile data / Wi-Fi',safeInfo:'Interception is never auto-enabled on installation or reboot. The watchdog restores Direct on core failure.',testNotice:'Technical preview: not yet tested on Redmi Note 8T.',importTitle:'VLESS / Xray configuration',importInfo:'Paste a TLS or REALITY VLESS link to generate Xray JSON, or edit the raw JSON below. Stop Xray before saving.',convert:'Convert VLESS → Xray',load:'Load saved configuration',save:'Save & validate configuration',privacy:'Nodes remain on your phone. Do not publish subscription UUIDs on GitHub.',logs:'Activity log',readLogs:'Read latest log',footer:'Third-party copyrights remain with their owners · Xray-core has a separate license.',running:'Running',stopped:'Stopped · Direct',missing:'Xray core missing',error:'Root WebUI interface unavailable. Use a compatible manager or KsuWebUIStandalone.',busy:'Working, please wait...',saved:'Configuration validated and saved.',saveFirst:'Stop Xray before modifying the active configuration.',invalid:'Invalid configuration or missing TPROXY inbound on port 9898.',converted:'Generated JSON. Click Save to validate.',waitAp:'Waiting for Hotspot.',ap:'Hotspot interface:',noAp:'Hotspot disabled.',failed:'Operation failed: ',direct:'The bundled sample uses Direct until you import a proxy node.',waiting:'Reading status...'}
 };
+Object.assign(dict.vi,{
+updateTag:'CẬP NHẬT',updateTitle:'Cập nhật Q2Ray Root',checkUpdate:'Kiểm tra cập nhật',installUpdate:'Tải & cài đặt',
+updateSafety:'Chỉ tải file từ GitHub của dự án, kiểm tra SHA-256 và yêu cầu khởi động lại. Nếu không có Magisk CLI, hãy cập nhật trong trình quản lý root.',
+releaseLink:'Xem danh sách phiên bản',updateDefault:'Kiểm tra bản mới từ GitHub Releases.',
+updateAvailable:'Có bản cập nhật ',updateCurrent:'Bạn đang dùng phiên bản mới nhất.',
+updateConfirm:'Tải và cài bản cập nhật qua Magisk? Hãy giữ kết nối Internet, không tắt máy trong lúc cài. Chỉ cần khởi động lại khi thông báo hoàn tất.',
+updateError:'Không thể kiểm tra cập nhật: ',updateReady:'Đã cài bản cập nhật. Khởi động lại điện thoại để áp dụng.',
+updateFailed:'Cập nhật thất bại: ',updateChecking:'Đang kiểm tra bản mới...',updateQueued:'Đã xếp lịch cập nhật...',updateDownloading:'Đang tải bản cập nhật...',updateVerifying:'Đang xác minh ZIP và SHA-256...',updateInstalling:'Đang cài module qua Magisk...',updateNo:'Không tìm thấy bản cập nhật mới.',updateUnsupported:'Không có Magisk CLI. Hãy dùng nút Update trong trình quản lý root.',updateTime:'Mất kết nối khi lấy trạng thái cập nhật.'
+});
+Object.assign(dict.en,{
+updateTag:'UPDATES',updateTitle:'Q2Ray Root updates',checkUpdate:'Check for updates',installUpdate:'Download & install',
+updateSafety:'Only downloads from this project’s GitHub releases, checks SHA-256 and requires a reboot. Without Magisk CLI, update in your root manager.',
+releaseLink:'View releases',updateDefault:'Check GitHub Releases for an update.',
+updateAvailable:'Update available: ',updateCurrent:'You are up to date.',
+updateConfirm:'Download and install an update with Magisk? Keep your internet connection and do not power off while installing. Reboot only after installation completes.',
+updateError:'Could not check for updates: ',updateReady:'Update installed. Reboot the phone to apply it.',
+updateFailed:'Update failed: ',updateChecking:'Checking for updates...',updateQueued:'Update queued...',updateDownloading:'Downloading update...',updateVerifying:'Verifying ZIP and SHA-256...',updateInstalling:'Installing module using Magisk...',updateNo:'No newer release found.',updateUnsupported:'Magisk CLI is unavailable. Please use the root manager Update button.',updateTime:'Lost update status connection.'
+});
 let lang='vi',working=false,status='stopped',initialized=false;
+let updateAvailable=false, updatePoll=null;
 try {lang=localStorage.getItem('q2r-lang')==='en'?'en':'vi';} catch(e){}
 const E=id=>document.getElementById(id);
 const tr=k=>(dict[lang]&&dict[lang][k])||k;
@@ -94,7 +125,7 @@ function exec(command){
  });
 }
 async function locked(task){if(working)return;working=true;disableButtons();say(tr('busy'));try{await task();}catch(e){say(tr('failed')+e.message,true);}finally{working=false;disableButtons();}}
-function disableButtons(){E('start').disabled=working||status==='running';E('stop').disabled=working||status!=='running';E('save').disabled=working||status==='running';E('hotspot').disabled=working;}
+function disableButtons(){E('start').disabled=working||status==='running';E('stop').disabled=working||status!=='running';E('save').disabled=working||status==='running';E('hotspot').disabled=working;E('checkUpdate').disabled=working;E('installUpdate').disabled=working||!updateAvailable||Boolean(updatePoll);}
 function renderStatus(){
  const el=E('state');el.className='status'+(status==='running'?' running':status==='missing-core'?' missing':'');
  E('stateText').textContent=status==='running'?tr('running'):status==='missing-core'?tr('missing'):tr('stopped');
@@ -135,6 +166,41 @@ function validateShape(config){
  const ok=(Array.isArray(config.inbounds)&&config.inbounds.some(x=>x.protocol==='dokodemo-door'&&Number(x.port)===9898&&x.streamSettings&&x.streamSettings.sockopt&&x.streamSettings.sockopt.tproxy==='tproxy')&&Array.isArray(config.outbounds)&&config.outbounds.length);
  if(!ok)throw new Error(tr('invalid'));
 }
+async function checkUpdate(silent=false){
+  const message=E('updateMsg');
+  if(!silent)message.textContent=tr('updateChecking');
+  try{
+    const out=await exec(UPDATE_CMD+' check');
+    if(/^UPDATE\s+\d+\s+v\d+\.\d+\.\d+$/.test(out)){
+      updateAvailable=true;
+      message.textContent=tr('updateAvailable')+out.split(/\s+/)[2]+'.';
+    }else if(/^CURRENT\s+\d+\s+v\d+\.\d+\.\d+$/.test(out)){
+      updateAvailable=false;
+      message.textContent=tr('updateCurrent');
+    }else throw new Error(out||'Invalid update response');
+  }catch(e){
+    updateAvailable=false;
+    message.textContent=tr('updateError')+e.message;
+  }
+  disableButtons();
+}
+async function pollUpdateStatus(){
+  let out;
+  try{out=await exec(UPDATE_CMD+' status');}catch(e){E('updateMsg').textContent=tr('updateTime');return;}
+  const messages={
+    QUEUED:tr('updateQueued'), CHECKING:tr('updateChecking'),
+    DOWNLOADING:tr('updateDownloading'), VERIFYING:tr('updateVerifying'),
+    INSTALLING:tr('updateInstalling'), READY_REBOOT:tr('updateReady'),
+    NO_UPDATE:tr('updateNo')
+  };
+  E('updateMsg').textContent=messages[out]||(/^FAILED:/.test(out)?tr('updateFailed')+out.slice(7).trim():out);
+  if(out==='READY_REBOOT'||out==='NO_UPDATE'||out.startsWith('FAILED:')){
+    clearInterval(updatePoll);
+    updatePoll=null;
+    updateAvailable=false;
+    disableButtons();
+  }
+}
 function b64utf8(value){const bytes=new TextEncoder().encode(value);let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
 E('lang').onchange=()=>{lang=E('lang').value;try{localStorage.setItem('q2r-lang',lang);}catch(e){}translate();};
 E('start').onclick=()=>locked(async()=>{say(await exec(CMD+' start'));await refresh();});
@@ -153,9 +219,21 @@ E('save').onclick=()=>locked(async()=>{
    CMD+" validate && mv -f "+DATA+"/config.candidate "+DATA+"/config.json && chmod 600 "+DATA+"/config.json";
  await exec(command);say(tr('saved'));
 });
+E('checkUpdate').onclick=()=>{checkUpdate(false);};
+E('installUpdate').onclick=()=>locked(async()=>{
+  if(!updateAvailable||updatePoll)return;
+  if(!window.confirm(tr('updateConfirm')))return;
+  const output=await exec(UPDATE_CMD+' begin');
+  if(output!=='STARTED')throw new Error(output||'Update could not start');
+  E('updateMsg').textContent=tr('updateQueued');
+  updatePoll=setInterval(pollUpdateStatus,3000);
+  disableButtons();
+  await pollUpdateStatus();
+});
 E('readLogs').onclick=()=>locked(async()=>{E('logText').textContent=await exec('tail -n 65 '+DATA+'/run.log 2>/dev/null || true');say('OK');});
-translate();say(tr('waiting'));
+translate();E('updateMsg').textContent=tr('updateDefault');say(tr('waiting'));
 locked(async()=>{await refresh();E('config').value=await exec('cat '+DATA+'/config.json');initialized=true;say(tr('direct'));});
 setInterval(()=>{if(initialized&&!working&&document.visibilityState==='visible')refresh().catch(()=>{});},12000);
+setTimeout(()=>checkUpdate(true),3000);
 </script>
 </body></html>

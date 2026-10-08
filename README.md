@@ -1,14 +1,16 @@
 # Q2Ray Root
 
-**Q2Ray Root** is an independent, root-based Android transparent-proxy module developed for `lemanhquyen20004`. The first technical-preview version, **v0.0.1**, focuses on the **Xray-core TPROXY engine** and a Vietnamese/English WebUI.
+**Q2Ray Root** is an independent, root-based Android transparent-proxy module developed for `lemanhquyen20004`. The first technical-preview version, **v0.0.2**, focuses on the **Xray-core TPROXY engine** and a Vietnamese/English WebUI.
 
 > **Technical preview — not verified on a real Redmi Note 8T yet.** Do not install this next to an active Box for Root / Magic V2Ray transparent-proxy service. Test the direct connection and recovery procedures before relying on tethering. A configured, reachable proxy node is required for proxied Internet access.
+
+**Updates:** Magisk's native **Update** button uses `update.json` and downloads the released ZIP directly, without manual downloading. The WebUI can check for newer versions and, when you explicitly approve, download and verify SHA-256 before using `magisk --install-module` (Magisk only). Restart your device when installation reports complete. For KernelSU/APatch, use the manager's Update feature. No background installs occur. GitHub Actions automatically produces a prerelease ZIP for each new `module.prop` version after checks pass.
 
 **Key principles:** fail-open on core failure; no automatic interception immediately after installation; only module-owned firewall chains and policy rules; optional AP interface-specific tethering; no global IPv6 blocking, default-route replacement or Android DNS resets.
 
 ## Quick start / Hướng dẫn nhanh
 
-1. Download the `Q2RayRoot-v0.0.1-arm64.zip` artifact built by GitHub Actions (or the corresponding release ZIP when published). **Source code ZIP does not include the Xray binary.**
+1. Download the `Q2RayRoot-v0.0.2-arm64.zip` artifact built by GitHub Actions (or the corresponding release ZIP when published). **Source code ZIP does not include the Xray binary.**
 2. Install the module through Magisk / KernelSU / APatch and reboot. Only ARM64 Android is supported for the first build.
 3. Open the module's WebUI (Magisk may require a compatible WebUI host such as KsuWebUIStandalone), select **Tiếng Việt** or **English**.
 4. Paste a supported VLESS link or an Xray JSON configuration, save it, then press **Start**.
@@ -27,6 +29,8 @@
 - `webroot/index.html`: responsive WebUI with two languages, VLESS URI import, raw JSON editing, status and logs.
 - `config/default.json`: minimal direct-only configuration for safe engine testing. Replace the default with a real proxy to route through a server.
 - `build.sh`: packages ARM64 Magisk ZIP using an official Xray binary downloaded during the release build, not at device startup.
+
+**Updater status and logs:** `/data/adb/q2rayroot/update.status` and `/data/adb/q2rayroot/update.log`. Temporary update files are removed when installation finishes. If check fails, confirm direct internet connectivity first. Successful GitHub Actions builds do not establish device compatibility.
 
 **Planned, not yet delivered:** Mihomo, sing-box, advanced subscription management, per-device traffic quotas, game profiles. These will only be added after testing networking on real devices.
 

@@ -1,5 +1,14 @@
 # Changelog / Nhật ký
 
+## v0.0.2 — GitHub updater (technical preview)
+
+- Nút kiểm tra cập nhật và tải/cài trong WebUI hai ngôn ngữ.
+- Magisk Update sử dụng `update.json`, phiên bản tăng lên `v0.0.2`.
+- Tự đóng gói ZIP ARM64, tạo SHA-256 và phát hành GitHub prerelease sau khi CI thành công.
+- Kiểm tra checksum trước khi cài qua Magisk CLI; dọn ZIP tạm, không tự động reboot.
+- KernelSU/APatch: sử dụng nút Update trong trình quản lý module.
+
+
 ## v0.0.1 — technical preview (source)
 
 - Independent Q2Ray Root module, ARM64-first.

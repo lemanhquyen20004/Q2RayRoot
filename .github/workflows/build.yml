@@ -1,60 +1,116 @@
-name: Q2Ray Root • checks and ARM64 package
+name: Q2Ray Root • checks, package and release
+
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  release:
-    types: [published]
+
 permissions:
   contents: write
+
 jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check shell syntax
+      - name: Shell syntax
         run: |
           set -e
-          for f in customize.sh service.sh action.sh uninstall.sh scripts/q2r.sh; do
+          for f in customize.sh service.sh action.sh uninstall.sh scripts/q2r.sh scripts/update.sh; do
             sh -n "$f"
           done
           bash -n build.sh
-      - name: Check WebUI JavaScript and config
+      - name: Check WebUI, bilingual strings, and update metadata
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import json,re
           html=Path('webroot/index.html').read_text()
           scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S|re.I)
-          assert scripts, 'Missing WebUI script'
-          Path('/tmp/q2ray-webui.js').write_text('\n'.join(scripts))
+          assert len(scripts)==1, 'Expected one WebUI script'
+          Path('/tmp/q2ray-webui.js').write_text(scripts[0])
+          props=dict(line.split('=',1) for line in Path('module.prop').read_text().splitlines() if '=' in line)
+          version=props['version']
+          assert re.fullmatch(r'v\d+\.\d+\.\d+', version),version
+          updates=json.loads(Path('update.json').read_text())
+          assert updates['version']==version
+          assert int(updates['versionCode'])==int(props['versionCode'])
+          assert updates['zipUrl'].endswith(f'/releases/download/{version}/Q2RayRoot-{version}-arm64.zip')
+          assert props['updateJson']=='https://raw.githubusercontent.com/lemanhquyen20004/Q2RayRoot/main/update.json'
           cfg=json.loads(Path('config/default.json').read_text())
           assert any(i.get('protocol')=='dokodemo-door' and i.get('port')==9898 for i in cfg['inbounds'])
           assert 'Tiếng Việt' in html and 'English' in html
-          assert 'localStorage' in html and 'hotspot' in html
-          print('WebUI and Xray template checks passed')
+          for marker in ('checkUpdate','installUpdate','updateMsg',"scripts/update.sh"):
+              assert marker in html,marker
+          script=Path('scripts/update.sh').read_text()
+          assert 'SHA256_MISMATCH' in script
+          assert 'magisk --install-module' in script
+          assert 'https://github.com/lemanhquyen20004/Q2RayRoot/releases/download' in script
+          assert 'rm -f "$DATA/update-payload.zip"' in script
+          assert 'LOCK=/dev/q2rayroot-update.lock' in script
+          print('WebUI, update.json, module metadata, updater checks passed')
           PY
           node --check /tmp/q2ray-webui.js
-      - name: Confirm no destructive global firewall reset
+      - name: Check boot networking safety
         run: |
+          set -e
           ! grep -En 'iptables.* -F (INPUT|OUTPUT|FORWARD)|ip route (flush|replace) default|disable_ipv6=1' scripts/q2r.sh
+          ! grep -Eq 'scripts/update.sh.*begin' service.sh customize.sh
+          ! grep -Eq 'scripts/q2r.sh.*start' service.sh customize.sh
+
   package:
     needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build installable ARM64 Magisk ZIP
+      - name: Build ARM64 Magisk ZIP with SHA-256
         run: bash build.sh
-      - name: Upload package
+      - name: Verify ZIP and checksum
+        run: |
+          set -e
+          cd dist
+          sha256sum -c Q2RayRoot-*.zip.sha256
+          unzip -tqq Q2RayRoot-*.zip
+          unzip -Z -1 Q2RayRoot-*.zip | grep -qx scripts/update.sh
+      - name: Upload installable module
         uses: actions/upload-artifact@v4
         with:
           name: Q2RayRoot-arm64
-          path: dist/Q2RayRoot-*.zip
+          path: |
+            dist/Q2RayRoot-*.zip
+            dist/Q2RayRoot-*.zip.sha256
           if-no-files-found: error
-      - name: Attach ARM64 ZIP to a manually published GitHub Release
-        if: github.event_name == 'release'
+
+  release:
+    needs: package
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Q2RayRoot-arm64
+          path: dist
+      - name: Publish tagged release only after tests and packaging
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" dist/Q2RayRoot-*.zip --clobber
+          set -euo pipefail
+          version=$(sed -n 's/^version=//p' module.prop | head -n 1)
+          code=$(sed -n 's/^versionCode=//p' module.prop | head -n 1)
+          test -s "dist/Q2RayRoot-$version-arm64.zip"
+          test -s "dist/Q2RayRoot-$version-arm64.zip.sha256"
+          (cd dist && sha256sum -c "Q2RayRoot-$version-arm64.zip.sha256")
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists. Never overwrite a published version."
+            exit 0
+          fi
+          gh release create "$version" \
+            "dist/Q2RayRoot-$version-arm64.zip" \
+            "dist/Q2RayRoot-$version-arm64.zip.sha256" \
+            --target "$GITHUB_SHA" \
+            --title "Q2Ray Root $version" \
+            --notes-file CHANGELOG.md \
+            --prerelease
+          echo "Release $version published with ZIP and checksum."

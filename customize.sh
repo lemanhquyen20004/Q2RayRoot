@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 
 [ "$BOOTMODE" = true ] || abort "! Install through Magisk/KernelSU/APatch Manager."
 [ "$ARCH" = arm64 ] || abort "! First build supports ARM64 only."
-ui_print "- Installing Q2Ray Root v0.0.1 (ARM64)"
+ui_print "- Installing Q2Ray Root v0.0.2 (ARM64)"
 ui_print "- All network interception remains OFF after installation."
 DATA=/data/adb/q2rayroot
 mkdir -p "$DATA"
@@ -23,6 +23,7 @@ else
 fi
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 set_perm "$MODPATH/scripts/q2r.sh" 0 0 0755
+set_perm "$MODPATH/scripts/update.sh" 0 0 0755
 set_perm "$MODPATH/action.sh" 0 0 0755
 set_perm "$MODPATH/service.sh" 0 0 0755
 set_perm "$MODPATH/uninstall.sh" 0 0 0755
